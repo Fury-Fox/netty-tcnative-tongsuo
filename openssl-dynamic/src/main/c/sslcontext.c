@@ -215,6 +215,15 @@ TCN_IMPLEMENT_CALL(jlong, SSLContext, make)(TCN_STDARGS, jint protocol, jint mod
         ctx = SSL_CTX_new(TLS_client_method());
     } else if (mode == SSL_MODE_SERVER) {
         ctx = SSL_CTX_new(TLS_server_method());
+    } else if (mode == SSL_MODE_TS_CLIENT) {
+        ctx = SSL_CTX_new(NTLS_client_method());
+        //允许使用国密双证书功能
+        SSL_CTX_enable_ntls(ctx);
+    }else if (mode == SSL_MODE_TS_SERVER) {
+        ctx = SSL_CTX_new(NTLS_server_method());
+        //允许使用国密双证书功能
+        SSL_CTX_enable_ntls(ctx);
+        SSL_CTX_enable_sm_tls13_strict(ctx);
     } else {
         ctx = SSL_CTX_new(TLS_method());
     }
@@ -965,6 +974,281 @@ cleanup:
     return rv;
 #endif // OPENSSL_IS_BORINGSSL
 }
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong ctx,
+                                                         jstring enccert, jstring enckey,
+                                                         jstring signcert, jstring signkey,
+                                                         jstring password)
+{
+#ifdef OPENSSL_IS_BORINGSSL
+    tcn_Throw(e, "Not supported using BoringSSL");
+    return JNI_FALSE;
+#else
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, JNI_FALSE);
+
+    jboolean rv = JNI_TRUE;
+    TCN_ALLOC_CSTRING(enccert);
+    TCN_ALLOC_CSTRING(enckey);
+    TCN_ALLOC_CSTRING(signcert);
+    TCN_ALLOC_CSTRING(signkey);
+    TCN_ALLOC_CSTRING(password);
+    EVP_PKEY *encpkey = NULL;
+    X509 *encxcert = NULL;
+    EVP_PKEY *signpkey = NULL;
+    X509 *signxcert = NULL;
+    const char *enc_key_file = NULL;
+    const char *enc_cert_file = NULL;
+    const char *sign_key_file = NULL;
+    const char *sign_cert_file = NULL;
+    const char *p = NULL;
+    char *old_password = NULL;
+    char err[ERR_LEN];
+
+    if (J2S(password)) {
+        old_password = c->password;
+
+        c->password = strdup(cpassword);
+        if (c->password == NULL) {
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    }
+    enc_key_file  = J2S(enckey);
+    enc_cert_file = J2S(enccert);
+    sign_key_file  = J2S(signkey);
+    sign_cert_file = J2S(signcert);
+    if (!enc_key_file) {
+        enc_key_file = enc_cert_file;
+    }
+    if (!sign_key_file) {
+        sign_key_file = sign_cert_file;
+    }
+    if (!enc_key_file || !enc_cert_file) {
+        tcn_Throw(e, "No Enc Certificate file specified or invalid file format");
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (!sign_key_file || !sign_cert_file) {
+        tcn_Throw(e, "No Sign Certificate file specified or invalid file format");
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    // enc certificate
+    if ((p = strrchr(enc_cert_file, '.')) != NULL && strcmp(p, ".pkcs12") == 0) {
+        if (!ssl_load_pkcs12(c, enc_cert_file, &encpkey, &encxcert, 0)) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate %s (%s)",
+                      enc_cert_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    } else {
+        if ((encpkey = load_pem_key(c, enc_key_file)) == NULL) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate key %s (%s)",
+                      enc_key_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+        if ((encxcert = load_pem_cert(c, enc_cert_file)) == NULL) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate %s (%s)",
+                      enc_cert_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    }
+    // signature certificate
+    if ((p = strrchr(sign_cert_file, '.')) != NULL && strcmp(p, ".pkcs12") == 0) {
+        if (!ssl_load_pkcs12(c, sign_cert_file, &signpkey, &signxcert, 0)) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate %s (%s)",
+                      sign_cert_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    } else {
+        if ((signpkey = load_pem_key(c, sign_key_file)) == NULL) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate key %s (%s)",
+                      sign_key_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+        if ((signxcert = load_pem_cert(c, sign_cert_file)) == NULL) {
+            ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+            tcn_Throw(e, "Unable to load certificate %s (%s)",
+                      sign_cert_file, err);
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    }
+    if (SSL_CTX_use_enc_certificate(c->ctx, encxcert) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        tcn_Throw(e, "Error setting enc certificate (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_sign_certificate(c->ctx, signxcert) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        tcn_Throw(e, "Error setting sign certificate (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_enc_PrivateKey(c->ctx, encpkey) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        tcn_Throw(e, "Error setting enc private key (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_sign_PrivateKey(c->ctx, signpkey) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        tcn_Throw(e, "Error setting sign private key (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+
+cleanup:
+    TCN_FREE_CSTRING(enccert);
+    TCN_FREE_CSTRING(enckey);
+    TCN_FREE_CSTRING(signcert);
+    TCN_FREE_CSTRING(signkey);
+    TCN_FREE_CSTRING(password);
+    EVP_PKEY_free(encpkey); // this function is safe to call with NULL
+    X509_free(encxcert); // this function is safe to call with NULL
+    EVP_PKEY_free(signpkey);
+    X509_free(signxcert);
+    free_and_reset_pass(c, old_password, rv);
+    return rv;
+#endif // OPENSSL_IS_BORINGSSL
+}
+
+TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlong ctx,
+                                                         jlong enccert, jlong enckey,
+                                                         jlong signcert, jlong signkey,
+                                                         jstring password)
+{
+#ifdef OPENSSL_IS_BORINGSSL
+    tcn_Throw(e, "Not supported using BoringSSL");
+    return JNI_FALSE;
+#else
+    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
+
+    TCN_CHECK_NULL(c, ctx, JNI_FALSE);
+
+    BIO *enc_cert_bio = J2P(enccert, BIO *);
+    BIO *enc_key_bio = J2P(enckey, BIO *);
+    BIO *sign_cert_bio = J2P(signcert, BIO *);
+    BIO *sign_key_bio = J2P(signkey, BIO *);
+    EVP_PKEY *enc_pkey = NULL;
+    X509 *enc_xcert = NULL;
+    EVP_PKEY *sign_pkey = NULL;
+    X509 *sign_xcert = NULL;
+
+    jboolean rv = JNI_TRUE;
+    TCN_ALLOC_CSTRING(password);
+    char *old_password = NULL;
+    char err[ERR_LEN];
+
+    if (J2S(password)) {
+        old_password = c->password;
+
+        c->password = strdup(cpassword);
+        if (c->password == NULL) {
+            rv = JNI_FALSE;
+            goto cleanup;
+        }
+    }
+
+    if (!enckey) {
+        enckey = enccert;
+    }
+    if (!enccert || !enckey) {
+        tcn_Throw(e, "No Enc Certificate file specified or invalid file format");
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+
+    if (!signkey) {
+        signkey = signcert;
+    }
+    if (!signcert || !signkey) {
+        tcn_Throw(e, "No Sign Certificate file specified or invalid file format");
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+
+    if ((enc_pkey = tcn_load_pem_key_bio(c->password, enc_key_bio)) == NULL) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Unable to load Enc certificate key (%s)",err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if ((enc_xcert = tcn_load_pem_cert_bio(c->password, enc_cert_bio)) == NULL) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Unable to load Enc certificate (%s) ", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+
+    if ((sign_pkey = tcn_load_pem_key_bio(c->password, sign_key_bio)) == NULL) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Unable to load Sign certificate key (%s)",err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if ((sign_xcert = tcn_load_pem_cert_bio(c->password, sign_cert_bio)) == NULL) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Unable to load Sign certificate (%s) ", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+
+    if (SSL_CTX_use_enc_certificate(c->ctx, enc_xcert) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Error setting enc certificate (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_sign_certificate(c->ctx, sign_xcert) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Error setting sign certificate (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_enc_PrivateKey(c->ctx, enc_pkey) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Error setting enc private key (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+    if (SSL_CTX_use_sign_PrivateKey(c->ctx, sign_pkey) <= 0) {
+        ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
+        ERR_clear_error();
+        tcn_Throw(e, "Error setting sign private key (%s)", err);
+        rv = JNI_FALSE;
+        goto cleanup;
+    }
+cleanup:
+    TCN_FREE_CSTRING(password);
+    EVP_PKEY_free(enc_pkey); // this function is safe to call with NULL
+    X509_free(enc_xcert); // this function is safe to call with NULL
+    EVP_PKEY_free(sign_pkey);
+    X509_free(sign_xcert);
+    free_and_reset_pass(c, old_password, rv);
+    return rv;
+#endif // OPENSSL_IS_BORINGSSL
+}
+
 
 TCN_IMPLEMENT_CALL(void, SSLContext, setNpnProtos0)(TCN_STDARGS, jlong ctx, jbyteArray next_protos,
         jint selectorFailureBehavior)
@@ -2816,6 +3100,8 @@ static const JNINativeMethod fixed_method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(setVerify, (JII)V, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setCertificate, (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setCertificateBio, (JJJLjava/lang/String;)Z, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setCertificateExt, (JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Z, SSLContext) },
+  { TCN_METHOD_TABLE_ENTRY(setCertificateExtBio, (JJJJJLjava/lang/String;)Z, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setNpnProtos0, (J[BI)V, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setAlpnProtos0, (J[BI)V, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setSessionCacheMode, (JJ)J, SSLContext) },

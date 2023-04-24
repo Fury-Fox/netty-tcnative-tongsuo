@@ -760,4 +760,9 @@ public final class SSLContext {
      * @param size the maximum number of bbytes
      */
     public static native void setMaxCertList(long ctx, long size);
+
+    public static native boolean setCertificateExt(long ctx, String enccert, String enckey, String signcert, String signkey, String password) throws Exception;
+
+    public static native boolean setCertificateExtBio(long ctx, long enccertBio, long enckeyBio, long signcertBio, long signkeyBio, String password) throws Exception;
+
 }

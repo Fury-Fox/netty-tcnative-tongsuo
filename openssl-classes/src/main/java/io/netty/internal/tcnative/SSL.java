@@ -80,6 +80,8 @@ public final class SSL {
     public static final int SSL_MODE_CLIENT         = 0;
     public static final int SSL_MODE_SERVER         = 1;
     public static final int SSL_MODE_COMBINED       = 2;
+    public static final int SSL_MODE_TS_CLIENT      = 3;
+    public static final int SSL_MODE_TS_SERVER      = 4;
 
     public static final long SSL_SESS_CACHE_OFF = sslSessCacheOff();
     public static final long SSL_SESS_CACHE_SERVER = sslSessCacheServer();

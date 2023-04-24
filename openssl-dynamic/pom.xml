@@ -140,7 +140,7 @@
               <forceAutogen>${forceAutogen}</forceAutogen>
               <forceConfigure>${forceConfigure}</forceConfigure>
               <configureArgs>
-                <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
+                <configureArg>--with-ssl=/opt/tongsuo</configureArg>
               </configureArgs>
               <windowsBuildTool>msbuild</windowsBuildTool>
             </configuration>
