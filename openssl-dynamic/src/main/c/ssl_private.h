@@ -106,8 +106,6 @@
 #define SSL_MODE_CLIENT         (0)
 #define SSL_MODE_SERVER         (1)
 #define SSL_MODE_COMBINED       (2)
-#define SSL_MODE_TS_CLIENT       (3)
-#define SSL_MODE_TS_SERVER       (4)
 
 #define SSL_DEFAULT_CACHE_SIZE  (256)
 #define SSL_DEFAULT_VHOST_NAME  ("_default_:443")

@@ -212,18 +212,11 @@ TCN_IMPLEMENT_CALL(jlong, SSLContext, make)(TCN_STDARGS, jint protocol, jint mod
     // in OpenSSL 1.1.0 the way protocols are enable/disabled changes
     // (SSL_OP_NO_SSLv3,... are deprecated and you should use: https://www.openssl.org/docs/man1.1.0/ssl/SSL_CTX_set_max_proto_version.html)
     if (mode == SSL_MODE_CLIENT) {
-        ctx = SSL_CTX_new(TLS_client_method());
-    } else if (mode == SSL_MODE_SERVER) {
-        ctx = SSL_CTX_new(TLS_server_method());
-    } else if (mode == SSL_MODE_TS_CLIENT) {
         ctx = SSL_CTX_new(NTLS_client_method());
-        //允许使用国密双证书功能
         SSL_CTX_enable_ntls(ctx);
-    }else if (mode == SSL_MODE_TS_SERVER) {
+    } else if (mode == SSL_MODE_SERVER) {
         ctx = SSL_CTX_new(NTLS_server_method());
-        //允许使用国密双证书功能
         SSL_CTX_enable_ntls(ctx);
-        SSL_CTX_enable_sm_tls13_strict(ctx);
     } else {
         ctx = SSL_CTX_new(TLS_method());
     }
@@ -423,6 +416,7 @@ TCN_IMPLEMENT_CALL(jlong, SSLContext, make)(TCN_STDARGS, jint protocol, jint mod
      *     - https://github.com/apple/swift-nio-ssl/pull/14
      */
     SSL_CTX_set_mode(c->ctx, SSL_MODE_RELEASE_BUFFERS | SSL_MODE_AUTO_RETRY);
+    
 
     /* Default session context id and cache size */
     SSL_CTX_sess_set_cache_size(c->ctx, SSL_DEFAULT_CACHE_SIZE);
@@ -985,9 +979,7 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong c
     return JNI_FALSE;
 #else
     tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
-
     TCN_CHECK_NULL(c, ctx, JNI_FALSE);
-
     jboolean rv = JNI_TRUE;
     TCN_ALLOC_CSTRING(enccert);
     TCN_ALLOC_CSTRING(enckey);
@@ -1005,10 +997,8 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong c
     const char *p = NULL;
     char *old_password = NULL;
     char err[ERR_LEN];
-
     if (J2S(password)) {
         old_password = c->password;
-
         c->password = strdup(cpassword);
         if (c->password == NULL) {
             rv = JNI_FALSE;
@@ -1035,7 +1025,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong c
         rv = JNI_FALSE;
         goto cleanup;
     }
-    // enc certificate
     if ((p = strrchr(enc_cert_file, '.')) != NULL && strcmp(p, ".pkcs12") == 0) {
         if (!ssl_load_pkcs12(c, enc_cert_file, &encpkey, &encxcert, 0)) {
             ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
@@ -1060,7 +1049,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong c
             goto cleanup;
         }
     }
-    // signature certificate
     if ((p = strrchr(sign_cert_file, '.')) != NULL && strcmp(p, ".pkcs12") == 0) {
         if (!ssl_load_pkcs12(c, sign_cert_file, &signpkey, &signxcert, 0)) {
             ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
@@ -1109,7 +1097,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExt)(TCN_STDARGS, jlong c
         rv = JNI_FALSE;
         goto cleanup;
     }
-
 cleanup:
     TCN_FREE_CSTRING(enccert);
     TCN_FREE_CSTRING(enckey);
@@ -1124,7 +1111,6 @@ cleanup:
     return rv;
 #endif // OPENSSL_IS_BORINGSSL
 }
-
 TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlong ctx,
                                                          jlong enccert, jlong enckey,
                                                          jlong signcert, jlong signkey,
@@ -1135,9 +1121,7 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
     return JNI_FALSE;
 #else
     tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
-
     TCN_CHECK_NULL(c, ctx, JNI_FALSE);
-
     BIO *enc_cert_bio = J2P(enccert, BIO *);
     BIO *enc_key_bio = J2P(enckey, BIO *);
     BIO *sign_cert_bio = J2P(signcert, BIO *);
@@ -1146,22 +1130,18 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
     X509 *enc_xcert = NULL;
     EVP_PKEY *sign_pkey = NULL;
     X509 *sign_xcert = NULL;
-
     jboolean rv = JNI_TRUE;
     TCN_ALLOC_CSTRING(password);
     char *old_password = NULL;
     char err[ERR_LEN];
-
     if (J2S(password)) {
         old_password = c->password;
-
         c->password = strdup(cpassword);
         if (c->password == NULL) {
             rv = JNI_FALSE;
             goto cleanup;
         }
     }
-
     if (!enckey) {
         enckey = enccert;
     }
@@ -1170,7 +1150,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
         rv = JNI_FALSE;
         goto cleanup;
     }
-
     if (!signkey) {
         signkey = signcert;
     }
@@ -1179,7 +1158,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
         rv = JNI_FALSE;
         goto cleanup;
     }
-
     if ((enc_pkey = tcn_load_pem_key_bio(c->password, enc_key_bio)) == NULL) {
         ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
         ERR_clear_error();
@@ -1194,7 +1172,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
         rv = JNI_FALSE;
         goto cleanup;
     }
-
     if ((sign_pkey = tcn_load_pem_key_bio(c->password, sign_key_bio)) == NULL) {
         ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
         ERR_clear_error();
@@ -1209,7 +1186,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCertificateExtBio)(TCN_STDARGS, jlon
         rv = JNI_FALSE;
         goto cleanup;
     }
-
     if (SSL_CTX_use_enc_certificate(c->ctx, enc_xcert) <= 0) {
         ERR_error_string_n(ERR_get_error(), err, ERR_LEN);
         ERR_clear_error();
@@ -1248,8 +1224,6 @@ cleanup:
     return rv;
 #endif // OPENSSL_IS_BORINGSSL
 }
-
-
 TCN_IMPLEMENT_CALL(void, SSLContext, setNpnProtos0)(TCN_STDARGS, jlong ctx, jbyteArray next_protos,
         jint selectorFailureBehavior)
 {
@@ -2981,14 +2955,6 @@ TCN_IMPLEMENT_CALL(jboolean, SSLContext, setCurvesList0)(TCN_STDARGS, jlong ctx,
     return ret == 1 ? JNI_TRUE : JNI_FALSE;
 }
 
-TCN_IMPLEMENT_CALL(void, SSLContext, setMaxCertList)(TCN_STDARGS, jlong ctx, jlong size) {
-    tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
-
-    TCN_CHECK_NULL(c, ctx, /* void */);
-
-    SSL_CTX_set_max_cert_list(c->ctx, size);
-}
-
 TCN_IMPLEMENT_CALL(jint, SSLContext, addCertificateCompressionAlgorithm0)(TCN_STDARGS, jlong ctx, jint direction, jint algorithmId, jobject algorithm) {
     tcn_ssl_ctxt_t *c = J2P(ctx, tcn_ssl_ctxt_t *);
     TCN_CHECK_NULL(c, ctx, 0);
@@ -3143,8 +3109,8 @@ static const JNINativeMethod fixed_method_table[] = {
   { TCN_METHOD_TABLE_ENTRY(getSslCtx, (J)J, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setUseTasks, (JZ)V, SSLContext) },
   { TCN_METHOD_TABLE_ENTRY(setNumTickets, (JI)Z, SSLContext) },
-  { TCN_METHOD_TABLE_ENTRY(setCurvesList0, (JLjava/lang/String;)Z, SSLContext) },
-  { TCN_METHOD_TABLE_ENTRY(setMaxCertList, (JJ)V, SSLContext) }
+  { TCN_METHOD_TABLE_ENTRY(setCurvesList0, (JLjava/lang/String;)Z, SSLContext) }
+
   // addCertificateCompressionAlgorithm0 --> needs dynamic method table
 };
 

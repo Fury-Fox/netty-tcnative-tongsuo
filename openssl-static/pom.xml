@@ -19,7 +19,7 @@
   <parent>
     <groupId>io.netty</groupId>
     <artifactId>netty-tcnative-parent</artifactId>
-    <version>2.0.60.Final-SNAPSHOT</version>
+    <version>2.0.59.Final</version>
   </parent>
   <artifactId>netty-tcnative-openssl-static</artifactId>
   <packaging>jar</packaging>
@@ -31,7 +31,7 @@
   </description>
 
   <properties>
-    <opensslSourceDir>${project.build.directory}/openssl-source/</opensslSourceDir>
+    <opensslSourceDir>${project.build.directory}/openssl-source</opensslSourceDir>
     <opensslHome>${project.build.directory}/openssl</opensslHome>
     <linkStatic>true</linkStatic>
     <compileLibrary>true</compileLibrary>
@@ -178,8 +178,7 @@
               <forceConfigure>${forceConfigure}</forceConfigure>
               <windowsBuildTool>msbuild</windowsBuildTool>
               <configureArgs>
-                <configureArg>${macOsxDeploymentTarget}</configureArg>
-                <configureArg>--with-ssl=${opensslHome}</configureArg>
+                <configureArg>--with-ssl=/opt/tongsuo/</configureArg>
                 <configureArg>--with-static-libs</configureArg>
                 <configureArg>--libdir=${project.build.directory}/native-build/target/lib</configureArg>
               </configureArgs>
@@ -229,11 +228,10 @@
                       </then>
                       <else>
                         <echo message="Downloading OpenSSL" />
+
                         <mkdir dir="${opensslSourceDir}" />
-
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/openssl-${opensslVersion}.zip" verbose="on" />
-
-                        <gunzip src="${project.build.directory}/openssl-${opensslVersion}.zip" dest="${project.build.directory}/" />
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/tongsuo-${opensslVersion}.zip" verbose="on" />
+                        <gunzip src="${project.build.directory}/tongsuo-${opensslVersion}.zip" dest="${project.build.directory}/" />
                         <move file="${project.build.directory}/Tongsuo-master" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
@@ -326,12 +324,10 @@
                       <else>
                         <echo message="Downloading OpenSSL" />
                         <mkdir dir="${opensslSourceDir}" />
-
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/openssl-${opensslVersion}.zip" verbose="on" />
-
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/tongsuo-${opensslVersion}.zip" verbose="on" />
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
                         <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="openssl-${opensslVersion}.zip" />
+                           <arg line="tongsuo-${opensslVersion}.zip" />
                          </exec>
                         <move file="${project.build.directory}/Tongsuo-master" tofile="${opensslSourceDir}" />
                       </else>
@@ -410,14 +406,12 @@
                       </then>
                       <else>
                         <echo message="Downloading OpenSSL" />
+
                         <mkdir dir="${opensslSourceDir}" />
-
-                            <!-- Download the openssl source. -->
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/openssl-${opensslVersion}.zip" verbose="on" />
-
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/heads/master" dest="${project.build.directory}/tongsuo-${opensslVersion}.zip" verbose="on" />
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
                         <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="openssl-${opensslVersion}.zip" />
+                           <arg line="tongsuo-${opensslVersion}.zip" />
                          </exec>
                         <move file="${project.build.directory}/Tongsuo-master" tofile="${opensslSourceDir}/" />
                       </else>
