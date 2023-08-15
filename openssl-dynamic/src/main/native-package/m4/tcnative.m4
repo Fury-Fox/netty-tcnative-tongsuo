@@ -359,21 +359,21 @@ case "$use_openssl" in
         if test "$use_openssl" = "/usr"
         then
             TCN_OPENSSL_INC=""
-            TCN_OPENSSL_LIBS="-lssl -lcrypto"
+            TCN_OPENSSL_LIBS="-l:libssl.a -l:libcrypto.a"
         else
             TCN_OPENSSL_INC="-I$use_openssl/include"
             case $host in
             *-solaris*)
-                TCN_OPENSSL_LIBS="-L$use_openssl/lib -R$use_openssl/lib -lssl -lcrypto"
+                TCN_OPENSSL_LIBS="-L$use_openssl/lib64 -R$use_openssl/lib64 -l:libssl.a -l:libcrypto.a"
                 ;;
             *-hp-hpux*)
-                TCN_OPENSSL_LIBS="-L$use_openssl/lib -Wl,+b: -lssl -lcrypto"
+                TCN_OPENSSL_LIBS="-L$use_openssl/lib64 -Wl,+b: -l:libssl.a -l:libcrypto.a"
                 ;;
             *linux*)
-                TCN_OPENSSL_LIBS="-L$use_openssl/lib -Wl,-rpath,$use_openssl/lib -lssl -lcrypto"
+                TCN_OPENSSL_LIBS="-L$use_openssl/lib64 -Wl,-rpath,$use_openssl/lib64 -l:libssl.a -l:libcrypto.a"
                 ;;
             *)
-                TCN_OPENSSL_LIBS="-L$use_openssl/lib -lssl -lcrypto"
+                TCN_OPENSSL_LIBS="-L$use_openssl/lib64 -l:libssl.a -l:libcrypto.a"
                 ;;
             esac
         fi

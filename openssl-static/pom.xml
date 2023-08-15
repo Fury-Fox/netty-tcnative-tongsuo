@@ -230,25 +230,13 @@
                       <else>
                         <echo message="Downloading OpenSSL" />
 
-                        <condition property="opensslFound"> 
-                          <http url="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" /> 
-                        </condition> 
-                         <if>
-                          <equals arg1="${opensslFound}" arg2="true" />
-                          <then>
+                        <mkdir dir="${opensslSourceDir}" />
                             <!-- Download the openssl source. -->
-                            <get src="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </then>
-                          <else>
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                            <!-- Download the openssl source from the old directory -->
-                            <get src="https://www.openssl.org/source/old/${opensslMinorVersion}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </else>
-                        </if>
-                        <checksum file="${project.build.directory}/openssl-${opensslVersion}.tar.gz" algorithm="SHA-256" property="${opensslSha256}" verifyProperty="isEqual" />
 
-                        <gunzip src="${project.build.directory}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/" />
-                        <untar src="${project.build.directory}/openssl-${opensslVersion}.tar" dest="${project.build.directory}/" />
-                        <move file="${project.build.directory}/openssl-${opensslVersion}" tofile="${opensslSourceDir}" />
+                        <gunzip src="${project.build.directory}/Tongsuo-${opensslVersion}.zip" dest="${project.build.directory}/" />
+                        <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
                   </target>
@@ -340,27 +328,16 @@
                       <else>
                         <echo message="Downloading OpenSSL" />
 
-                        <condition property="opensslFound"> 
-                          <http url="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" /> 
-                        </condition> 
-                         <if>
-                          <equals arg1="${opensslFound}" arg2="true" />
-                          <then>
+                        <mkdir dir="${opensslSourceDir}" />
                             <!-- Download the openssl source. -->
-                            <get src="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </then>
-                          <else>
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                            <!-- Download the openssl source from the old directory -->
-                            <get src="https://www.openssl.org/source/old/${opensslMinorVersion}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </else>
-                        </if>
-                        <checksum file="${project.build.directory}/openssl-${opensslVersion}.tar.gz" algorithm="SHA-256" property="${opensslSha256}" verifyProperty="isEqual" />
 
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
-                        <exec executable="tar" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="xfvz openssl-${opensslVersion}.tar.gz" />
+                        <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
+                           <arg line="Tongsuo-${opensslVersion}.zip" />
                          </exec>
-                        <move file="${project.build.directory}/openssl-${opensslVersion}" tofile="${opensslSourceDir}" />
+                        <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}" />
                       </else>
                     </if>
                   </target>
@@ -387,7 +364,7 @@
                         <echo message="Building OpenSSL" />
                         <mkdir dir="${opensslHome}" />
                         <exec executable="config" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                          <arg line="-O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --prefix=${opensslHome} --openssldir=${opensslHome} --libdir=lib" />
+                          <arg line="-O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --strict-warnings enable-ntls --prefix=${opensslHome} --openssldir=${opensslHome} --libdir=lib" />
                         </exec>
                         <exec executable="make" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
                           <arg value="depend" />
@@ -438,27 +415,16 @@
                       <else>
                         <echo message="Downloading OpenSSL" />
 
-                        <condition property="opensslFound"> 
-                          <http url="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" /> 
-                        </condition> 
-                         <if>
-                          <equals arg1="${opensslFound}" arg2="true" />
-                          <then>
+                        <mkdir dir="${opensslSourceDir}" />
                             <!-- Download the openssl source. -->
-                            <get src="https://www.openssl.org/source/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </then>
-                          <else>
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                            <!-- Download the openssl source from the old directory -->
-                            <get src="https://www.openssl.org/source/old/${opensslMinorVersion}/openssl-${opensslVersion}.tar.gz" dest="${project.build.directory}/openssl-${opensslVersion}.tar.gz" verbose="on" />
-                          </else>
-                        </if>
-                        <checksum file="${project.build.directory}/openssl-${opensslVersion}.tar.gz" algorithm="SHA-256" property="${opensslSha256}" verifyProperty="isEqual" />
 
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
-                        <exec executable="tar" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="xfvz openssl-${opensslVersion}.tar.gz" />
+                        <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
+                           <arg line="Tongsuo-${opensslVersion}.zip" />
                          </exec>
-                        <move file="${project.build.directory}/openssl-${opensslVersion}" tofile="${opensslSourceDir}" />
+                        <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
                   </target>
@@ -488,12 +454,12 @@
                           <!-- Don't try to compile the tests as this currently fails: https://github.com/openssl/openssl/issues/18720 -->
                           <then>
                             <exec executable="Configure" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="darwin64-arm64-cc no-tests -O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --prefix=${opensslHome} --openssldir=${opensslHome} ${macOsxDeploymentTarget}" />
+                              <arg line="darwin64-arm64-cc no-tests -O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --strict-warnings enable-ntls --prefix=${opensslHome} --openssldir=${opensslHome} ${macOsxDeploymentTarget}" />
                             </exec>
                           </then>
                           <else>
                             <exec executable="Configure" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="darwin64-x86_64-cc no-tests -O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --prefix=${opensslHome} --openssldir=${opensslHome} ${macOsxDeploymentTarget}" />
+                              <arg line="darwin64-x86_64-cc no-tests -O3 -fno-omit-frame-pointer -fPIC no-ssl2 no-ssl3 no-shared no-comp -DOPENSSL_NO_HEARTBEATS --strict-warnings enable-ntls --prefix=${opensslHome} --openssldir=${opensslHome} ${macOsxDeploymentTarget}" />
                             </exec>
                           </else>
                         </if>
