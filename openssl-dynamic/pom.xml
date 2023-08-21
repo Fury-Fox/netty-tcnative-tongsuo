@@ -101,7 +101,7 @@
 
                 <jar destfile="${nativeJarFile}" manifest="${nativeJarWorkdir}/META-INF/MANIFEST.MF" basedir="${nativeJarWorkdir}" index="true" excludes="META-INF/MANIFEST.MF,META-INF/INDEX.LIST" />
                 <!-- Adjust the classifier used for different OS distributions which provide differently-built openSSL libraries -->
-                <condition property="classifier" value="${jniClassifier}-fedora">
+                <condition property="classifier" value="${jniClassifier}">
                   <isset property="os.detected.release.like.fedora" />
                 </condition>
                 <condition property="classifier" value="${jniClassifier}-suse">

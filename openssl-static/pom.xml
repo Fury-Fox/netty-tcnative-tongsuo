@@ -132,7 +132,7 @@
 
                 <jar destfile="${nativeJarFile}" manifest="${nativeJarWorkdir}/META-INF/MANIFEST.MF" basedir="${nativeJarWorkdir}" index="true" excludes="META-INF/MANIFEST.MF,META-INF/INDEX.LIST" />
                 <!-- Adjust the classifier used for different OS distributions which provide differently-built openSSL libraries -->
-                <condition property="classifier" value="${jniClassifier}-fedora">
+                <condition property="classifier" value="${jniClassifier}">
                   <isset property="os.detected.release.like.fedora" />
                 </condition>
                 <condition property="classifier" value="${jniClassifier}-suse">
@@ -231,7 +231,7 @@
                         <echo message="Downloading OpenSSL" />
 
                         <mkdir dir="${opensslSourceDir}" />
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre2" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                         <gunzip src="${project.build.directory}/Tongsuo-${opensslVersion}.zip" dest="${project.build.directory}/" />
                         <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
@@ -325,7 +325,7 @@
                       <else>
                         <echo message="Downloading OpenSSL" />
                         <mkdir dir="${opensslSourceDir}" />
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre2" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
                         <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
                            <arg line="Tongsuo-${opensslVersion}.zip" />
@@ -409,7 +409,7 @@
                         <echo message="Downloading OpenSSL" />
 
                         <mkdir dir="${opensslSourceDir}" />
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
+                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre2" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
                         <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
                            <arg line="Tongsuo-${opensslVersion}.zip" />
