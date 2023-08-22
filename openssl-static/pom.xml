@@ -271,7 +271,7 @@
                           <then>
                             <echo message="Building OpenSSL for Win32" />
                             <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="Configure VC-WIN32 --prefix=${sslHomePath}" />
+                              <arg line="Configure VC-WIN32 enable-ntls no-shared enable-ntls --prefix=${sslHomePath}" />
                             </exec>
                             <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
                               <arg line="install" />
@@ -280,7 +280,7 @@
                           <else>
                             <echo message="Building OpenSSL for Win64" />
                             <exec executable="perl" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
-                              <arg line="Configure VC-WIN64A --prefix=${sslHome}" />
+                              <arg line="Configure VC-WIN64A enable-ntls no-shared enable-ntls --prefix=${sslHome}" />
                             </exec>
                             <exec executable="nmake" failonerror="true" dir="${opensslSourceDir}" resolveexecutable="true">
                               <arg line="install" />
