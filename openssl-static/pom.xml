@@ -228,14 +228,16 @@
                         <echo message="OpenSSL was already downloaded, skipping the build step." />
                       </then>
                       <else>
-                        <echo message="Downloading OpenSSL" />
+                        <echo message="Downloading Tongsuo" />
 
-                        <mkdir dir="${opensslSourceDir}" />
-                            <!-- Download the openssl source. -->
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
-                           <!-- Download the openssl source from the old directory -->
+                        <get src="https://github.com/Fury-Fox/Tongsuo/releases/download/8.4.0-pre2-ff01/Tongsuo-${opensslVersion}.tar.gz" dest="${project.build.directory}/Tongsuo-${opensslVersion}.tar.gz" verbose="on" />
 
-                        <gunzip src="${project.build.directory}/Tongsuo-${opensslVersion}.zip" dest="${project.build.directory}/" />
+                        <!-- <mkdir dir="${opensslSourceDir}" /> -->
+
+                        <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
+                        <exec executable="tar" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
+                          <arg line="xfvz Tongsuo-${opensslVersion}.tar.gz" />
+                        </exec>
                         <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
@@ -326,18 +328,17 @@
                         <echo message="OpenSSL was already downloaded, skipping the build step." />
                       </then>
                       <else>
-                        <echo message="Downloading OpenSSL" />
+                        <echo message="Downloading Tongsuo" />
 
-                        <mkdir dir="${opensslSourceDir}" />
-                            <!-- Download the openssl source. -->
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
-                           <!-- Download the openssl source from the old directory -->
+                        <get src="https://github.com/Fury-Fox/Tongsuo/releases/download/8.4.0-pre2-ff01/Tongsuo-${opensslVersion}.tar.gz" dest="${project.build.directory}/Tongsuo-${opensslVersion}.tar.gz" verbose="on" />
+
+                        <!-- <mkdir dir="${opensslSourceDir}" /> -->
 
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
-                        <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="Tongsuo-${opensslVersion}.zip" />
-                         </exec>
-                        <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}" />
+                        <exec executable="tar" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
+                          <arg line="xfvz Tongsuo-${opensslVersion}.tar.gz" />
+                        </exec>
+                        <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
                   </target>
@@ -410,20 +411,19 @@
                     <if>
                       <available file="${opensslSourceDir}" />
                       <then>
-                        <echo message="OpenSSL was already downloaded, skipping the build step." />
+                        <echo message="Tongsuo was already downloaded, skipping the build step." />
                       </then>
                       <else>
-                        <echo message="Downloading OpenSSL" />
+                        <echo message="Downloading Tongsuo" />
 
-                        <mkdir dir="${opensslSourceDir}" />
-                            <!-- Download the openssl source. -->
-                        <get src="https://codeload.github.com/Tongsuo-Project/Tongsuo/zip/refs/tags/8.4.0-pre1" dest="${project.build.directory}/Tongsuo-${opensslVersion}.zip" verbose="on" />
-                           <!-- Download the openssl source from the old directory -->
+                        <get src="https://github.com/Fury-Fox/Tongsuo/releases/download/8.4.0-pre2-ff01/Tongsuo-${opensslVersion}.tar.gz" dest="${project.build.directory}/Tongsuo-${opensslVersion}.tar.gz" verbose="on" />
+
+                        <!-- <mkdir dir="${opensslSourceDir}" /> -->
 
                         <!-- Use the tar command (rather than the untar ant task) in order to preserve file permissions. -->
-                        <exec executable="unzip" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
-                           <arg line="Tongsuo-${opensslVersion}.zip" />
-                         </exec>
+                        <exec executable="tar" failonerror="true" dir="${project.build.directory}/" resolveexecutable="true">
+                          <arg line="xfvz Tongsuo-${opensslVersion}.tar.gz" />
+                        </exec>
                         <move file="${project.build.directory}/Tongsuo-${opensslVersion}" tofile="${opensslSourceDir}/" />
                       </else>
                     </if>
